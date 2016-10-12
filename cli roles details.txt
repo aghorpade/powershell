@@ -1,0 +1,4 @@
+Admins, Org Managers, and Space Managers can assign user roles using the cf CLI.
+
+
+Available roles are “OrgManager”, “BillingManager”, “OrgAuditor”, “SpaceManager”, “SpaceDeveloper”, and “SpaceAuditor”. For example, to grant the Org Manager role to a user within an org:

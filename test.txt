@@ -1,0 +1,3 @@
+helllo this is demo for anvesh to write to a file
+Write-Host 'hello world'
+Write-Host 'hello world'

@@ -1,0 +1,4 @@
+Rexton Production=https://api.run.pivotal.io
+Rexton Non-production=https://apidev.run.pivotal.io
+Rexton Sandbox=https://apiSandbox.run.pivotal.io
+Rexton UAT=https://apiprod.run.pivotal.io
