@@ -54,9 +54,14 @@ $body = @{
 	password=$password
 }
 #$OAuthTokenURL+=$Body
-$OauthResponse=Invoke-RestMethod -Method POST -Uri "$OAuthTokenURL" -Headers $headers -Body $body
-#Write-host $OauthResponse
-
+$OauthResponse=try{
+Invoke-RestMethod -Method POST -Uri "$OAuthTokenURL" -Headers $headers -Body $body
+}catch{$_.Exception.Response.StatusCode.Value__}
+#Write-host "response"$OauthResponse
+if($OauthResponse -eq 401){
+Write-host "UnAuthorized"
+break
+}
 #get access_token and token_type values
 $access_token=$OauthResponse."access_token"
 $token_type=$OauthResponse."token_type"
@@ -68,8 +73,8 @@ $headers.add('Accept','application/json')
 $beareretoken="Bearer "+$access_token
 $headers.add('Authorization', $beareretoken)
 #Write-host $orguri
-$result = Invoke-RestMethod -Method GET -Uri "$orguri" -Headers $headers
-#Write-host "result of app"$result.resources
+$result =Invoke-RestMethod -Method GET -Uri "$orguri" -Headers $headers
+
 
 $orgarray=@()
 $orgGuidArray=@()
@@ -146,10 +151,10 @@ $spacerole=""
 switch ($env)
      {
            1 {
-                $spacerole = "manager"
+                $spacerole = "managers"
            } 
 		   2 {
-                $spacerole = "developer"
+                $spacerole = "developers"
            } 
 		   3 {
                 $spacerole = "auditors"
@@ -167,15 +172,27 @@ Write-host " You have selected organization"$targetOrg"space" $targetSpace"role"
 
 if ( $choiceRTN -ne 1 )
 {
-	#call REST api to assign role to user
-     Write-host "We have applied script to provide proper role to user."
+	#call REST api to assign role to user REST - v2/spaces/31a74bcf-88c7-4cb2-bdbd-435a190f5c6e/managers pass body as -{
+    # "username": "user@example.com"}
+	
+	$spaceAccessURI=$baseUri+"/v2/spaces/"+$targetSpaceGuid+"/"+$spacerole
+	Write-host "space acces URL "$spaceAccessURI
+	$body = @{
+				"username"=$username
+			}
+	$body = $body | convertto-json
+	Write-host "body"$body
+	$AccessResponse=try{Invoke-RestMethod -Method POST -Uri "$spaceAccessURI" -Headers $headers -Body $body -ContentType "application/json"
+	}catch{$_.Exception.Response.StatusCode.Value__}
+	Write-host "response"$AccessResponse
+	#Write-host "response from access url"$AccessResponse.StatusCode
+    # Write-host "We have applied script to provide proper role to user."
+	if($AccessResponse -eq 404 -Or $AccessResponse -eq 401 -Or $AccessResponse -eq 500){
+		Write-host "Not able to provide access to user"
+	}
 }
 else
 {
    "No role has been provided to user."
 }
-
-
-
-#handle exceptions or error
 
