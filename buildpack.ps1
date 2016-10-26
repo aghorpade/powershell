@@ -134,71 +134,14 @@ while ( $env -lt 1 -or $env -gt $spacearray.Length ){
 Write-host "selected space is"$spacearray[$env-1]"and space is " $spaceGuidArray[$env-1]
 $targetSpace=$spacearray[$env-1]
 $targetSpaceGuid=$spaceGuidArray[$env-1]
-#url to associate role with user on space /v2/spaces/31a74bcf-88c7-4cb2-bdbd-435a190f5c6e/managers  either  /auditors /developers
-
-#get username from user
-$username = read-host "Please enter username:=" 
-#show space role options and read input from user
-Write-host "Available Space Roles"
-Write-host "1. SpaceManager"
-Write-host "2. SpaceDeveloper"
-Write-host "3. SpaceAuditor"
-$env = read-host "Select Space Role options:="
-while ( $env -lt 1 -or $env -gt 3 ){
-	Write-host "1. SpaceManager"
-	Write-host "2. SpaceDeveloper"
-	Write-host "3. SpaceAuditor"
-	[Int]$env = read-host "Select Space Role options:=" 
-}
-$spacerole=""
-switch ($env)
-     {
-           1 {
-                $spacerole = "managers"
-           } 
-		   2 {
-                $spacerole = "developers"
-           } 
-		   3 {
-                $spacerole = "auditors"
-           } 
-	 }
-
-Write-host " You have selected organization"$targetOrg"space" $targetSpace"role" $spacerole" for user" $username
-    $caption = "Please Confirm"    
-    $message = "Are you Sure You Want To Proceed:"
-    [int]$defaultChoice = 1
-    $yes = New-Object System.Management.Automation.Host.ChoiceDescription "&Yes", "Do the job."
-    $no = New-Object System.Management.Automation.Host.ChoiceDescription "&No", "Do not do the job."
-    $options = [System.Management.Automation.Host.ChoiceDescription[]]($yes, $no)
-    $choiceRTN = $host.ui.PromptForChoice($caption,$message, $options,$defaultChoice)
-
-if ( $choiceRTN -ne 1 )
+#/v2/spaces/be1f9c1d-e629-488e-a560-a35b545f0ad7/apps to list all apps in space
+$appsUri=$baseUri+"/v2/spaces/"+$targetSpaceGuid+"/apps"
+$result = Invoke-RestMethod -Method GET -Uri "$appsUri" -Headers $headers
+Write-host $result
+for($i=0;$i -lt $result.resources.Length;$i++)
 {
-	#call REST api to assign role to user REST - v2/spaces/31a74bcf-88c7-4cb2-bdbd-435a190f5c6e/managers pass body as -{
-    # "username": "user@example.com"}
-	
-	$spaceAccessURI=$baseUri+"/v2/spaces/"+$targetSpaceGuid+"/"+$spacerole
-	Write-host "space acces URL "$spaceAccessURI
-	$body = @{
-				"username"=$username
-			}
-	$body = $body | convertto-json
-	Write-host "body"$body
-	$AccessResponse=try{Invoke-RestMethod -Method POST -Uri "$spaceAccessURI" -Headers $headers -Body $body -ContentType "application/json"
-	}catch{$_.Exception.Response.StatusCode.Value__}
-	Write-host "response"$AccessResponse
-	#Write-host "response from access url"$AccessResponse.StatusCode
-    # Write-host "We have applied script to provide proper role to user."
-	if($AccessResponse -eq 404 -Or $AccessResponse -eq 401 -Or $AccessResponse -eq 500){
-		Write-host "Not able to provide access to user"
-	}else{
-		Write-host "We have successfully provided role to user"
-		#display list of user for given role under space/organization
-	}
-}
-else
-{
-   "No role has been provided to user."
+$buildpackresult= "App Name"+$result.resources[$i].entity.name+"buildpack"+$result.resources[$i].entity.buildpack
+Write-host $buildpackresult
+$buildpackresult | Out-File -Append myProducts.txt
 }
 
