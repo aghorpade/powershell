@@ -163,8 +163,8 @@ switch ($env)
                 $spacerole = "auditors"
            } 
 	 }
-
-Write-host " You have selected organization"$targetOrg"space" $targetSpace"role" $spacerole" for user" $username
+	#Print selected organization ,space and username and role to be assigned
+	Write-host " You have selected organization"$targetOrg"space" $targetSpace"role" $spacerole" for user" $username
     $caption = "Please Confirm"    
     $message = "Are you Sure You Want To Proceed:"
     [int]$defaultChoice = 1
@@ -184,21 +184,19 @@ if ( $choiceRTN -ne 1 )
 				"username"=$username
 			}
 	$body = $body | convertto-json
-	Write-host "body"$body
-	$AccessResponse=try{Invoke-RestMethod -Method POST -Uri "$spaceAccessURI" -Headers $headers -Body $body -ContentType "application/json"
+	#invoke rest api to set role to given username
+	$AccessResponse=try{Invoke-RestMethod -Method PUT -Uri "$spaceAccessURI" -Headers $headers -Body $body
 	}catch{$_.Exception.Response.StatusCode.Value__}
 	Write-host "response"$AccessResponse
-	#Write-host "response from access url"$AccessResponse.StatusCode
-    # Write-host "We have applied script to provide proper role to user."
+	#check response is successfull or not
 	if($AccessResponse -eq 404 -Or $AccessResponse -eq 401 -Or $AccessResponse -eq 500){
-		Write-host "Not able to provide access to user"
+		Write-host "========================= ERROR ============================"
+		Write-host "Exception : Either user not available or something wrong in request"
 	}else{
 		Write-host "We have successfully provided role to user"
-		#display list of user for given role under space/organization
 	}
 }
 else
 {
    "No role has been provided to user."
 }
-
